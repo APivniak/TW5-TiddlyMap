@@ -65,5 +65,8 @@
   "scripts": {
     "build": "gulp",
     "build:production": "gulp --production"
+  },
+  "dependencies": {
+    "sass": "^1.80.4"
   }
 }

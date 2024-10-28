@@ -49,6 +49,8 @@
  *
  *******************************************************************/
 
+import {map} from 'async/index';
+
 /**** Script config ************************************************/
 
 // the author and pluginname; lowercase letters and no spaces!
@@ -76,13 +78,15 @@ import beep from 'beepbeep';
 import gulp from 'gulp';
 import gulpif from 'gulp-if';
 import babel from 'gulp-babel';
-import sass from 'gulp-sass';
+//import sass from 'gulp-sass';
+const sass = require('gulp-sass')(require('sass'));
 import replace from 'gulp-replace';
 import terser from 'gulp-terser';
 import jsdoc from 'gulp-jsdoc3';
 import esprima from 'gulp-esprima';
 import debug from 'gulp-debug';
 import bump from 'gulp-bump';
+import * as stream from 'node:stream';
 
 /**** Preprocessing ************************************************/
 
@@ -180,7 +184,7 @@ gulp.task('compile and move styles', () => {
   };
 
   let stream = gulp.src(pluginSrc + '/**/*.scss')
-                 .pipe(sass(opts));
+                 .pipe(sass.sync().on('error', sass.logError));
 
   for (let str in replaceAfterSass) {
     stream = stream.pipe(replace(str, replaceAfterSass[str]));
