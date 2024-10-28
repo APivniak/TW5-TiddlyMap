@@ -184,7 +184,7 @@ gulp.task('compile and move styles', () => {
   };
 
   let stream = gulp.src(pluginSrc + '/**/*.scss')
-                 .pipe(sass.sync().on('error', sass.logError));
+                 .pipe(sass.sync(opts).on('error', sass.logError));
 
   for (let str in replaceAfterSass) {
     stream = stream.pipe(replace(str, replaceAfterSass[str]));
@@ -302,6 +302,6 @@ gulp.task(
       'compile and move styles',
       'compile and move scripts'
     ),
-    'bundle the plugin',
+    'bundle the plugin'
   )
 );
