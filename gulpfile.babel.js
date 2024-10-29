@@ -179,7 +179,7 @@ gulp.task('copy vanilla files', () => {
 gulp.task('compile and move styles', () => {
 
   const opts = {
-    outputStyle: (argv.production ? 'compressed' : 'nested'),
+    outputStyle: (argv.production ? 'compressed' : 'expanded'),
     sourceComments: false,
   };
 

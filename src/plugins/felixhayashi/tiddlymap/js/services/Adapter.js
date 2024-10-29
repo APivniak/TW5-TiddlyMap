@@ -100,6 +100,37 @@ class Adapter {
 
   }
 
+  _addTag(tiddler, tag) {
+    if (tiddler && typeof tag === 'string') {
+      tag = tag.trim();
+      if (tag !== "") {
+        let modification = $tw.wiki.getModificationFields();
+        modification.tags = (tiddler.fields.tags || []).slice(0);
+        $tw.utils.pushTop(modification.tags, tag);
+        $tw.wiki.addTiddler(new $tw.Tiddler(tiddler, modification));
+      }
+    }
+  }
+
+  _removeTag(tiddler, tag) {
+    if (tiddler && typeof tag === 'string') {
+      tag = tag.trim()
+
+      let modification = $tw.wiki.getModificationFields();
+      if (tiddler && tiddler.fields.tags) {
+        let p = tiddler.fields.tags.indexOf(tag);
+        if (p !== -1) {
+          modification.tags = (tiddler.fields.tags || []).slice(0);
+          modification.tags.splice(p, 1);
+          if (modification.tags.length === 0) {
+            modification.tags = undefined;
+          }
+          $tw.wiki.addTiddler(new $tw.Tiddler(tiddler, modification));
+        }
+      }
+    }
+  }
+
   /**
    * Private function to handle the insertion or deletion of an edge.
    * It prepares the process according to the action type and delegates
@@ -114,10 +145,16 @@ class Adapter {
 
     // get from-node and corresponding tiddler
     const fromTRef = this.getTiddlerById(edge.from);
-
     if (!fromTRef || !utils.tiddlerExists(fromTRef)) {
       return;
     }
+
+    // get to-node reference
+    const toTRef = this.getTiddlerById(edge.to);
+    if (!toTRef || !utils.tiddlerExists(toTRef)) {
+      return;
+    }
+    const targetObj = utils.getTiddler(toTRef);
 
     const tObj = utils.getTiddler(fromTRef);
     const type = this.indeces.allETy[edge.type] || EdgeType.getInstance(edge.type);
@@ -132,6 +169,15 @@ class Adapter {
     if (action === 'insert' && !type.exists()) {
       type.save();
     }
+
+    // Process adding/removing tags
+    setTimeout(()=>{
+      if (action==='insert') {
+        this._addTag(targetObj, fromTRef);
+      } else if (action==='delete') {
+        this._removeTag(targetObj, fromTRef);
+      }
+    }, 10);
 
     return edge;
 
@@ -922,8 +968,14 @@ class Adapter {
    */
   insertNode(node = {}, view, protoTiddler) {
 
+    /*** note Agama added
+       Make tiddler title in form "View Label : Node Label"
+       Add tiddler caption as node label
+     */
+
+    let caption = node.label || utils.getRandomLabel();
     // title might has changed after generateNewTitle()
-    node.label = this.wiki.generateNewTitle(node.label || utils.getRandomLabel());
+    node.label = this.wiki.generateNewTitle(view.getLabel() + ':' + caption);
 
     // add to tiddler store
     const tObj = new $tw.Tiddler(
@@ -931,6 +983,7 @@ class Adapter {
       protoTiddler,
       {
         title: node.label, // force title
+        caption: caption,
         'tmap.id': null // force empty id (generated later)
       },
       this.wiki.getModificationFields(),
